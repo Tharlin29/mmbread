@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Bread of Life - ခရစ်ယာန်စာပေ နှင့် တရားဒေသနာများ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Pyidaungsu', sans-serif, system-ui; }
+        
+        .custom-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .custom-grid { gap: 1rem; }
+        }
+
+        @media (min-width: 1024px) {
+            .custom-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .ad-slide-fade {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Announcement / Dynamic Ad Banner Container -->
+    <div id="ad-banner-container" class="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-md relative overflow-hidden flex items-center justify-between px-3 py-1 cursor-pointer select-none transition-all duration-300">
+        <div id="ad-content-area" onclick="openAdDetailModal()" class="w-full h-full flex items-center justify-center ad-slide-fade"></div>
+        <div id="ad-admin-controls" class="hidden absolute top-2 right-2 z-10 flex gap-1">
+            <button onclick="event.stopPropagation(); openAdConfigModal()" class="bg-black/60 hover:bg-black/80 text-white text-[10px] sm:text-xs px-2 py-1 rounded shadow border border-white/30">⚙️ ကြော်ငြာ Preset ပြင်ရန်</button>
+            <button onclick="event.stopPropagation(); openAdManageModal()" class="bg-black/60 hover:bg-black/80 text-white text-[10px] sm:text-xs px-2 py-1 rounded shadow border border-white/30">📋 ကြော်ငြာ စီမံရန်</button>
+        </div>
+    </div>
+
+    <!-- Dynamic Header Navbar -->
+    <nav class="bg-blue-900 text-white shadow-md relative">
+        <div class="max-w-7xl mx-auto px-3 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center justify-center gap-3 text-center md:text-left">
+                <img id="header-left-logo" src="" alt="Left Logo" class="h-10 sm:h-12 w-10 sm:w-12 object-contain rounded-full bg-white/10 p-1 border border-white/20 hidden">
+                <div>
+                    <h1 id="header-main-title" class="text-xl md:text-3xl font-bold tracking-wide text-amber-300">🥪 bread of life 🥪</h1>
+                    <p id="header-sub-title" class="text-xs md:text-base text-blue-200 mt-0.5 font-medium">ခရစ်ယာန်စာပေ နှင့် တရားဒေသနာများ</p>
+                </div>
+                <img id="header-right-logo" src="" alt="Right Logo" class="h-10 sm:h-12 w-10 sm:w-12 object-contain rounded-full bg-white/10 p-1 border border-white/20 hidden">
+            </div>
+            
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <button onclick="openPostModal()" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition flex items-center gap-1 shadow">
+                    ✍️ စာရေးမယ်
+                </button>
+
+                <div id="auth-section">
+                    <button onclick="openLoginModal()" id="login-btn" class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition shadow">
+                        Admin Login
+                    </button>
+                    <div id="admin-controls" class="hidden flex items-center gap-1.5 flex-wrap">
+                        <button onclick="openHeaderEditModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition shadow">✏️ Header ပြင်ရန်</button>
+                        <button onclick="openCategoryManageModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition shadow">🏷️ Categories</button>
+                        <button onclick="openAdUploadModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition shadow">📢 ကြော်ငြာတင်မည်</button>
+                        <button onclick="openPendingModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition relative">
+                            ⏳ စောင့်ဆိုင်းဆဲ <span id="pending-count" class="bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+                        </button>
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4">
+        <div id="category-filters-container" class="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-8 justify-center"></div>
+        <div id="posts-grid" class="custom-grid"></div>
+    </div>
+
+    <!-- Read Full Post Modal (With Reading Customization, Admin Actions, Likes, & Comments) -->
+    <div id="read-modal" class="fixed inset-0 bg-black/70 hidden flex justify-center items-center z-50 p-2 sm:p-4">
+        <div id="read-modal-card" class="bg-white rounded-lg w-full max-w-3xl shadow-2xl max-h-[92vh] flex flex-col transition-all duration-300">
+            
+            <!-- Custom Reader Toolbar -->
+            <div id="read-modal-toolbar" class="bg-gray-100 border-b p-2 md:p-3 rounded-t-lg flex flex-wrap items-center justify-between gap-2 text-xs md:text-sm">
+                
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- Text Size Control -->
+                    <div class="flex items-center gap-1 bg-white border px-2 py-1 rounded shadow-sm">
+                        <span class="text-gray-500 font-bold text-xs">A</span>
+                        <input type="range" id="reader-font-size" min="12" max="28" value="16" oninput="changeReaderFontSize(this.value)" class="w-16 sm:w-24 cursor-pointer accent-blue-600">
+                        <span class="text-gray-800 font-bold text-base">A</span>
+                        <span id="font-size-val" class="text-[10px] text-gray-500 w-7 text-center">16px</span>
+                    </div>
+
+                    <!-- Preset Color Themes -->
+                    <div class="flex items-center gap-1 bg-white border p-1 rounded shadow-sm">
+                        <button onclick="setReaderTheme('#ffffff', '#1f2937')" class="w-5 h-5 rounded-full bg-white border border-gray-400 shadow-sm" title="Light Theme"></button>
+                        <button onclick="setReaderTheme('#18181b', '#f4f4f5')" class="w-5 h-5 rounded-full bg-zinc-900 border border-gray-600 shadow-sm" title="Dark Theme"></button>
+                        <button onclick="setReaderTheme('#fbf0d9', '#432818')" class="w-5 h-5 rounded-full bg-[#fbf0d9] border border-amber-300 shadow-sm" title="Sepia Theme"></button>
+                    </div>
+
+                    <!-- Custom Color Pickers -->
+                    <div class="flex items-center gap-2 bg-white border px-2 py-1 rounded shadow-sm">
+                        <label class="flex items-center gap-1 text-[11px] text-gray-600 cursor-pointer">
+                            <span>BG:</span>
+                            <input type="color" id="reader-bg-picker" value="#ffffff" onchange="changeReaderBgColor(this.value)" class="w-5 h-5 border-none bg-transparent cursor-pointer">
+                        </label>
+                        <label class="flex items-center gap-1 text-[11px] text-gray-600 cursor-pointer">
+                            <span>Text:</span>
+                            <input type="color" id="reader-text-picker" value="#1f2937" onchange="changeReaderTextColor(this.value)" class="w-5 h-5 border-none bg-transparent cursor-pointer">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Admin Edit & Delete Actions inside Preview Modal -->
+                    <div id="read-admin-actions" class="hidden flex items-center gap-1">
+                        <button onclick="openEditPostModalFromRead()" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-2.5 py-1 rounded text-xs transition shadow flex items-center gap-1">
+                            ✏️ Edit
+                        </button>
+                        <button onclick="deleteCurrentPost()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-2.5 py-1 rounded text-xs transition shadow flex items-center gap-1">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                    <button onclick="closeReadModal()" class="text-gray-500 hover:text-black font-bold text-xl px-2">✕</button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div id="read-content-area" class="p-4 md:p-6 overflow-y-auto flex-1 leading-relaxed transition-colors duration-300">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="read-category" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded font-semibold"></span>
+                    <span id="read-author" class="text-xs font-semibold text-gray-500 bg-black/5 px-2 py-0.5 rounded"></span>
+                </div>
+                <h2 id="read-title" class="text-xl md:text-2xl font-bold mb-4 border-b pb-2"></h2>
+                <div id="read-images-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"></div>
+                <div id="read-content" class="whitespace-pre-line mb-6 transition-all duration-150"></div>
+
+                <!-- Interaction Section: Like & Comment/Feedback -->
+                <div class="border-t pt-4 mt-6 bg-black/5 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <button id="like-btn" onclick="toggleLikeCurrentPost()" class="flex items-center gap-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-full font-bold shadow-sm transition active:scale-95">
+                            ❤️ <span id="like-count">0</span> Likes
+                        </button>
+                        <span class="text-xs text-gray-500 font-medium">စာဖတ်သူများ၏ တုံ့ပြန်ချက်များ</span>
+                    </div>
+
+                    <form onsubmit="submitComment(event)" class="space-y-2 mb-6">
+                        <div class="flex gap-2">
+                            <input type="text" id="comment-author-input" placeholder="သင့်အမည် (မထည့်ပါက Anonymous)" class="w-1/3 border p-2 rounded text-xs sm:text-sm bg-white text-gray-800 border-gray-300">
+                            <input type="text" id="comment-text-input" placeholder="မှတ်ချက် သို့မဟုတ် Feedback ပေးပို့ရန်..." required class="flex-1 border p-2 rounded text-xs sm:text-sm bg-white text-gray-800 border-gray-300">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 py-1.5 rounded transition shadow">
+                                💬 ပေးပို့မည်
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="comments-list-container" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div id="read-modal-footer" class="border-t p-3 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeReadModal()" class="px-5 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm font-semibold">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Post Edit Modal -->
+    <div id="edit-post-modal" class="fixed inset-0 bg-black/60 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2 text-amber-600">✏️ စာမူ ပြင်ဆင်ရန် (Admin)</h2>
+            <form id="edit-post-form" onsubmit="saveEditedPost(event)" class="space-y-3">
+                <input type="hidden" id="edit-post-id">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">ခေါင်းစဉ်</label>
+                    <input type="text" id="edit-post-title" required class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">စာရေးသူ</label>
+                    <input type="text" id="edit-post-author" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Category</label>
+                    <select id="edit-post-category" required class="w-full border p-2 rounded text-sm"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">ပုံ URL များ (တစ်ကြောင်းစီ ခွဲထည့်ပါ)</label>
+                    <textarea id="edit-post-images" rows="3" class="w-full border p-2 rounded text-xs" placeholder="https://example.com/image.jpg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">အကြောင်းအရာ စာသား</label>
+                    <textarea id="edit-post-content" rows="6" required class="w-full border p-2 rounded text-sm"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 border-t pt-3">
+                    <button type="button" onclick="closeEditPostModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded text-sm font-semibold">ပြင်ဆင်မှု သိမ်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Other Admin & User Modals -->
+    <div id="ad-detail-modal" class="fixed inset-0 bg-black/70 hidden flex justify-center items-center z-50 p-3 sm:p-5">
+        <div class="bg-white rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-amber-600 text-white px-4 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-base sm:text-lg">📢 ကြော်ငြာ အသေးစိတ်ကြည့်ရှုရန်</h3>
+                <button onclick="closeAdDetailModal()" class="hover:bg-amber-700 rounded-full p-1 w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            </div>
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-center">
+                <div id="modal-ad-image-box" class="w-full max-h-[60vh] flex items-center justify-center bg-gray-100 rounded-lg p-2 border">
+                    <img id="modal-ad-image" src="" class="max-h-full max-w-full object-contain rounded">
+                </div>
+                <div id="modal-ad-text" class="text-gray-800 text-sm sm:text-base font-medium whitespace-pre-line text-left bg-amber-50 p-4 rounded-lg border border-amber-200"></div>
+            </div>
+            <div class="bg-gray-100 px-4 py-3 border-t flex justify-end">
+                <button onclick="closeAdDetailModal()" class="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-semibold">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ad-config-modal" class="fixed inset-0 bg-black/60 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
+            <h2 class="text-lg font-bold mb-4 text-gray-800 flex items-center justify-between border-b pb-2">
+                <span>⚙️ Banner & Slide Dynamic Config</span>
+                <button onclick="closeAdConfigModal()" class="text-gray-500 hover:text-black">✕</button>
+            </h2>
+            <form onsubmit="saveAdConfig(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">⏱️ Speed (စက္ကန့်)</label>
+                    <select id="cfg-ad-speed" class="w-full border p-2 rounded text-sm">
+                        <option value="500">0.5 စက္ကန့်</option>
+                        <option value="1000">1 စက္ကန့်</option>
+                        <option value="2000">2 စက္ကန့်</option>
+                        <option value="3000">3 စက္ကန့်</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">🖼️ Image Scale Size</label>
+                    <select id="cfg-ad-img-size" class="w-full border p-2 rounded text-sm">
+                        <option value="h-[95%]">95% Height</option>
+                        <option value="h-[90%]">90% Height</option>
+                        <option value="h-[80%]">80% Height</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">📏 Banner Height</label>
+                    <input type="range" id="cfg-banner-height" min="60" max="180" step="10" class="w-full" oninput="document.getElementById('banner-h-val').textContent = this.value + 'px'">
+                    <span id="banner-h-val" class="text-xs font-bold text-gray-700">90px</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">📐 Fit Mode</label>
+                    <select id="cfg-ad-fit" class="w-full border p-2 rounded text-sm">
+                        <option value="object-contain">Contain</option>
+                        <option value="object-cover">Cover</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 border-t pt-4">
+                    <button type="button" onclick="closeAdConfigModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded text-sm">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="header-edit-modal" class="fixed inset-0 bg-black/60 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">✏️ Header Title နှင့် Logo ပြင်ဆင်ရန်</h2>
+            <form onsubmit="saveHeaderSettings(event)" class="space-y-4">
+                <input type="text" id="edit-header-title" required class="w-full border p-2 rounded text-sm" placeholder="Main Title">
+                <input type="text" id="edit-header-subtitle" required class="w-full border p-2 rounded text-sm" placeholder="Sub Title">
+                <input type="file" accept="image/*" class="w-full border p-1 rounded text-xs" onchange="handleLogoUpload(event, 'left')">
+                <input type="url" id="edit-left-logo-url" placeholder="Left Logo URL" class="w-full border p-2 rounded text-xs">
+                <input type="file" accept="image/*" class="w-full border p-1 rounded text-xs" onchange="handleLogoUpload(event, 'right')">
+                <input type="url" id="edit-right-logo-url" placeholder="Right Logo URL" class="w-full border p-2 rounded text-xs">
+                <div class="flex justify-end gap-2 border-t pt-4">
+                    <button type="button" onclick="closeHeaderEditModal()" class="px-4 py-2 bg-gray-200 text-sm">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 text-white text-sm rounded">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="category-manage-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4">🏷️ Category စီမံခန့်ခွဲရန်</h2>
+            <form onsubmit="addCategory(event)" class="mb-4 flex gap-2">
+                <input type="text" id="new-category-name" placeholder="Category အသစ်..." required class="flex-1 border p-2 rounded text-sm">
+                <button type="submit" class="bg-green-600 text-white text-sm px-3 py-2 rounded">+ ထည့်မည်</button>
+            </form>
+            <div id="category-manage-list" class="space-y-2 max-h-60 overflow-y-auto mb-4 border-t pt-3"></div>
+            <div class="flex justify-end">
+                <button onclick="closeCategoryManageModal()" class="px-4 py-2 bg-gray-800 text-white rounded text-sm">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ad-upload-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4">📢 ကြော်ငြာသစ် တင်မည်</h2>
+            <form onsubmit="saveAd(event)" class="space-y-3">
+                <textarea id="ad-text" rows="3" placeholder="ကြော်ငြာ စာသား..." class="w-full border p-2 rounded text-sm"></textarea>
+                <input type="file" accept="image/*" class="w-full border p-1 rounded text-sm" onchange="handleAdImageUpload(event)">
+                <input type="url" id="ad-url" placeholder="သို့မဟုတ် ပုံ URL" class="w-full border p-2 rounded text-sm">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeAdUploadModal()" class="px-4 py-2 text-gray-600">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded">တင်မည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="ad-manage-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4">📋 တင်ထားသော ကြော်ငြာများ</h2>
+            <div id="ad-list-container" class="space-y-3 max-h-60 overflow-y-auto mb-4"></div>
+            <div class="flex justify-end">
+                <button onclick="closeAdManageModal()" class="px-4 py-2 bg-gray-800 text-white rounded text-sm">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Pending Posts List Modal -->
+    <div id="pending-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-xl shadow-xl max-h-[90vh] flex flex-col">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2 text-purple-800">⏳ စောင့်ဆိုင်းဆဲ စာမူများ</h2>
+            <div id="pending-list-container" class="space-y-3 mb-4 overflow-y-auto flex-1 pr-1"></div>
+            <div class="flex justify-end border-t pt-3">
+                <button onclick="closePendingModal()" class="px-4 py-2 bg-gray-800 text-white rounded text-sm font-semibold">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Pending Post Full Review Modal (Text+Image Clear Check) -->
+    <div id="pending-detail-modal" class="fixed inset-0 bg-black/70 hidden flex justify-center items-center z-[60] p-3 sm:p-5">
+        <div class="bg-white rounded-xl max-w-3xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+            <div class="bg-purple-800 text-white px-4 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-base sm:text-lg">📋 စာမူ အသေးစိတ် စစ်ဆေးရန် (Admin Check)</h3>
+                <button onclick="closePendingDetailModal()" class="hover:bg-purple-900 rounded-full p-1 w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            </div>
+            
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                <div class="flex justify-between items-start border-b pb-2">
+                    <div>
+                        <span id="pending-detail-category" class="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded font-bold"></span>
+                        <h2 id="pending-detail-title" class="text-xl font-bold text-gray-900 mt-2"></h2>
+                    </div>
+                    <span id="pending-detail-author" class="text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full border"></span>
+                </div>
+
+                <!-- Pending Post Images Grid -->
+                <div id="pending-detail-images" class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3"></div>
+
+                <!-- Full Pending Content with Line Break Preservation -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">အကြောင်းအရာ စာသား အပြည့်အစုံ:</h4>
+                    <p id="pending-detail-content" class="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <!-- Action Buttons for Admin Review -->
+            <div class="bg-gray-100 px-4 py-3 border-t flex items-center justify-between">
+                <button onclick="closePendingDetailModal()" class="bg-gray-400 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-gray-500">မလုပ်တော့ပါ</button>
+                <div class="flex gap-2">
+                    <button id="pending-reject-btn" class="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-1">
+                        ❌ ပယ်ဖျက်မည်
+                    </button>
+                    <button id="pending-approve-btn" class="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-1">
+                        ✅ အတည်ပြုပြီး တင်မည်
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4">Admin Login</h2>
+            <input type="password" id="admin-password" placeholder="Password ထည့်ပါ" class="w-full border p-2 rounded mb-4">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeLoginModal()" class="px-4 py-2 text-gray-600">မလုပ်တော့ပါ</button>
+                <button onclick="login()" class="px-4 py-2 bg-blue-600 text-white rounded">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="post-modal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-2">✍️ စာပေ / တရားဒေသနာ ရေးသားမည်</h2>
+            <form id="post-form" onsubmit="savePost(event)" class="space-y-3">
+                <input type="text" id="post-title" required class="w-full border p-2 rounded" placeholder="ခေါင်းစဉ်">
+                <input type="text" id="post-author" class="w-full border p-2 rounded" placeholder="စာရေးသူ / ဟောပြောသူ">
+                <select id="post-category" required class="w-full border p-2 rounded"></select>
+                <input type="file" accept="image/*" multiple class="w-full border p-1 rounded text-sm" onchange="handleMultipleImagesUpload(event)">
+                <textarea id="post-image-urls" placeholder="သို့မဟုတ် ပုံ URL များကို တစ်ကြောင်းစီ ခွဲထည့်ပါ" rows="2" class="w-full border p-2 rounded text-sm"></textarea>
+                <textarea id="post-content" rows="6" required class="w-full border p-2 rounded" placeholder="အကြောင်းအရာ စာသား..."></textarea>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closePostModal()" class="px-4 py-2 text-gray-600">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">ပေးပို့မည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Engine -->
+    <script>
+        const initialCategories = ["ခရစ်ယာန်စာပေ", "သက်သေခံချက်", "သရော်စာ", "ကဗျာ", "သတင်း", "တရားဒေသနာများ", "ဘာသာပြန်စာပေ"];
+        const defaultHeaderSettings = { title: "🥪 bread of life 🥪", subtitle: "ခရစ်ယာန်စာပေ နှင့် တရားဒေသနာများ", leftLogo: "", rightLogo: "" };
+        const defaultAdConfig = { speed: 1000, imageSize: "h-[90%]", bannerHeight: "90px", objectFit: "object-contain" };
+        const defaultAds = [
+            { id: 101, text: "SPECIAL BIBLE STUDY PROGRAMME 2026\n\nကြော်ငြာအကြောင်းအရာ အသေးစိတ်ကို ဖတ်ရှုနိုင်ပါသည်။", image: "https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=800&auto=format&fit=crop" },
+            { id: 102, text: "CHRISTIAN BOOKS & DEVOTIONAL RETREAT", image: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=800&auto=format&fit=crop" }
+        ];
+
+        let categories = JSON.parse(localStorage.getItem('christian_categories')) || initialCategories;
+        let posts = JSON.parse(localStorage.getItem('christian_posts')) || [];
+        let ads = JSON.parse(localStorage.getItem('christian_ads')) || defaultAds;
+        let headerSettings = JSON.parse(localStorage.getItem('christian_header')) || defaultHeaderSettings;
+        let adConfig = JSON.parse(localStorage.getItem('christian_ad_config')) || defaultAdConfig;
+        
+        let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+        let currentFilter = 'all';
+        let currentAdIndex = 0;
+        let adSlideshowTimer = null;
+        let uploadedImagesBase64 = [];
+        let activeReadingPostId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUI();
+            updateAuthUI();
+            renderCategories();
+            renderPosts();
+            applyAdBannerConfig();
+            startDirectAdSlideshow();
+            updatePendingBadge();
+        });
+
+        /* Reader Customization & Interactions Logic */
+        function changeReaderFontSize(val) {
+            document.getElementById('read-content').style.fontSize = val + 'px';
+            document.getElementById('font-size-val').textContent = val + 'px';
+        }
+
+        function changeReaderBgColor(color) {
+            const card = document.getElementById('read-modal-card');
+            const contentArea = document.getElementById('read-content-area');
+            card.style.backgroundColor = color;
+            contentArea.style.backgroundColor = color;
+        }
+
+        function changeReaderTextColor(color) {
+            document.getElementById('read-content-area').style.color = color;
+            document.getElementById('read-title').style.color = color;
+        }
+
+        function setReaderTheme(bgColor, textColor) {
+            changeReaderBgColor(bgColor);
+            changeReaderTextColor(textColor);
+            document.getElementById('reader-bg-picker').value = bgColor;
+            document.getElementById('reader-text-picker').value = textColor;
+        }
+
+        function openReadModal(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            activeReadingPostId = id;
+            document.getElementById('read-title').textContent = post.title;
+            document.getElementById('read-category').textContent = post.category;
+            document.getElementById('read-author').textContent = post.author ? `✍️ ${post.author}` : '';
+            document.getElementById('read-content').textContent = post.content;
+
+            const imgContainer = document.getElementById('read-images-container');
+            imgContainer.innerHTML = '';
+
+            const imagesToDisplay = post.images && post.images.length > 0 ? post.images : (post.image ? [post.image] : []);
+
+            if (imagesToDisplay.length > 0) {
+                imgContainer.classList.remove('hidden');
+                imagesToDisplay.forEach(imgUrl => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.className = "w-full h-auto max-h-80 object-cover rounded-lg border shadow-sm";
+                    imgContainer.appendChild(img);
+                });
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+
+            // Admin Actions visibility inside preview
+            const adminActions = document.getElementById('read-admin-actions');
+            if (isAdmin) adminActions.classList.remove('hidden');
+            else adminActions.classList.add('hidden');
+
+            // Default reader themes
+            setReaderTheme('#ffffff', '#1f2937');
+            changeReaderFontSize(document.getElementById('reader-font-size').value);
+
+            // Render Likes & Comments
+            renderPostInteractions(post);
+
+            document.getElementById('read-modal').classList.remove('hidden');
+        }
+
+        function closeReadModal() { 
+            activeReadingPostId = null;
+            document.getElementById('read-modal').classList.add('hidden'); 
+        }
+
+        /* Admin Delete & Edit from Preview Modal */
+        function deleteCurrentPost() {
+            if (!isAdmin || !activeReadingPostId) return;
+            if (confirm("ဤစာမူကို အပြီးတိုင် ဖျက်ရန် သေချာပါသလား?")) {
+                posts = posts.filter(p => p.id !== activeReadingPostId);
+                localStorage.setItem('christian_posts', JSON.stringify(posts));
+                closeReadModal();
+                renderPosts();
+                updatePendingBadge();
+            }
+        }
+
+        function openEditPostModalFromRead() {
+            if (!isAdmin || !activeReadingPostId) return;
+            const post = posts.find(p => p.id === activeReadingPostId);
+            if (!post) return;
+
+            document.getElementById('edit-post-id').value = post.id;
+            document.getElementById('edit-post-title').value = post.title || '';
+            document.getElementById('edit-post-author').value = post.author || '';
+            document.getElementById('edit-post-content').value = post.content || '';
+
+            // Populate category select options
+            const catSelect = document.getElementById('edit-post-category');
+            catSelect.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                if (cat === post.category) opt.selected = true;
+                catSelect.appendChild(opt);
+            });
+
+            // Populate images text
+            const imagesList = post.images && post.images.length > 0 ? post.images : (post.image ? [post.image] : []);
+            document.getElementById('edit-post-images').value = imagesList.join('\n');
+
+            document.getElementById('edit-post-modal').classList.remove('hidden');
+        }
+
+        function closeEditPostModal() {
+            document.getElementById('edit-post-modal').classList.add('hidden');
+        }
+
+        function saveEditedPost(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-post-id').value);
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            post.title = document.getElementById('edit-post-title').value.trim();
+            post.author = document.getElementById('edit-post-author').value.trim();
+            post.category = document.getElementById('edit-post-category').value;
+            post.content = document.getElementById('edit-post-content').value.trim();
+
+            const imgText = document.getElementById('edit-post-images').value.trim();
+            post.images = imgText ? imgText.split('\n').map(u => u.trim()).filter(u => u !== '') : [];
+
+            localStorage.setItem('christian_posts', JSON.stringify(posts));
+            closeEditPostModal();
+            renderPosts();
+            openReadModal(id); // Reload updated content in Preview Modal
+            alert('စာမူ ပြင်ဆင်မှု သိမ်းဆည်းပြီးပါပြီ!');
+        }
+
+        /* Likes & Comments Functionality */
+        function renderPostInteractions(post) {
+            document.getElementById('like-count').textContent = post.likes || 0;
+
+            const commentsContainer = document.getElementById('comments-list-container');
+            commentsContainer.innerHTML = '';
+
+            const comments = post.comments || [];
+
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = `<p class="text-xs text-gray-500 italic text-center py-2">မှတ်ချက် မရှိသေးပါ။ ပထမဆုံး အကြံပြုချက် ရေးသားလိုက်ပါ!</p>`;
+                return;
+            }
+
+            comments.forEach((c, idx) => {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = "bg-white p-2.5 rounded shadow-sm border border-gray-200 flex items-start justify-between text-gray-800 text-xs sm:text-sm";
+                commentDiv.innerHTML = `
+                    <div class="flex-1 pr-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-blue-900">${c.author}</span>
+                            <span class="text-[10px] text-gray-400">${c.date || ''}</span>
+                        </div>
+                        <p class="text-gray-700 whitespace-pre-line leading-relaxed">${c.text}</p>
+                    </div>
+                    ${isAdmin ? `<button onclick="deleteComment(${post.id}, ${idx})" class="text-red-500 hover:text-red-700 font-bold px-1.5 py-0.5 rounded text-xs border border-red-200 bg-red-50" title="Admin: ဖျက်မည်">🗑️</button>` : ''}
+                `;
+                commentsContainer.appendChild(commentDiv);
+            });
+        }
+
+        function toggleLikeCurrentPost() {
+            if (!activeReadingPostId) return;
+            const post = posts.find(p => p.id === activeReadingPostId);
+            if (post) {
+                post.likes = (post.likes || 0) + 1;
+                localStorage.setItem('christian_posts', JSON.stringify(posts));
+                renderPostInteractions(post);
+            }
+        }
+
+        function submitComment(e) {
+            e.preventDefault();
+            if (!activeReadingPostId) return;
+
+            const post = posts.find(p => p.id === activeReadingPostId);
+            if (!post) return;
+
+            const authorInput = document.getElementById('comment-author-input');
+            const textInput = document.getElementById('comment-text-input');
+
+            const author = authorInput.value.trim() || 'Anonymous';
+            const text = textInput.value.trim();
+
+            if (!text) return;
+
+            if (!post.comments) post.comments = [];
+
+            post.comments.push({
+                author: author,
+                text: text,
+                date: new Date().toLocaleDateString('my-MM')
+            });
+
+            localStorage.setItem('christian_posts', JSON.stringify(posts));
+            textInput.value = '';
+            renderPostInteractions(post);
+        }
+
+        function deleteComment(postId, commentIndex) {
+            if (!isAdmin) return;
+            const post = posts.find(p => p.id === postId);
+            if (post && post.comments) {
+                post.comments.splice(commentIndex, 1);
+                localStorage.setItem('christian_posts', JSON.stringify(posts));
+                renderPostInteractions(post);
+            }
+        }
+
+        /* General Operations & App Engine */
+        function handleMultipleImagesUpload(e) {
+            const files = Array.from(e.target.files);
+            uploadedImagesBase64 = [];
+            if (files.length === 0) return;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    uploadedImagesBase64.push(evt.target.result);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function savePost(e) {
+            e.preventDefault();
+            const title = document.getElementById('post-title').value.trim();
+            const author = document.getElementById('post-author').value.trim() || 'အမည်မသိ';
+            const category = document.getElementById('post-category').value;
+            const content = document.getElementById('post-content').value.trim();
+            const urlImagesText = document.getElementById('post-image-urls').value.trim();
+            
+            let urlImages = urlImagesText ? urlImagesText.split('\n').map(u => u.trim()).filter(u => u !== '') : [];
+            let finalImages = [...uploadedImagesBase64, ...urlImages];
+
+            const newPost = {
+                id: Date.now(),
+                title: title,
+                author: author,
+                category: category,
+                content: content,
+                images: finalImages,
+                likes: 0,
+                comments: [],
+                status: isAdmin ? 'approved' : 'pending'
+            };
+
+            posts.unshift(newPost);
+            localStorage.setItem('christian_posts', JSON.stringify(posts));
+
+            document.getElementById('post-form').reset();
+            uploadedImagesBase64 = [];
+            closePostModal();
+
+            if (isAdmin) {
+                alert('စာမူကို အောင်မြင်စွာ တင်လိုက်ပါပြီ။');
+                renderPosts();
+            } else {
+                alert('သင့်စာမူကို ပေးပို့လိုက်ပါပြီ။ Admin မှ စစ်ဆေးအတည်ပြုပြီးပါက ဖော်ပြပေးပါမည်။');
+            }
+            updatePendingBadge();
+        }
+
+        function renderPosts() {
+            const grid = document.getElementById('posts-grid');
+            grid.innerHTML = '';
+            const approvedPosts = posts.filter(p => p.status === 'approved' || !p.status);
+            const filteredPosts = currentFilter === 'all' ? approvedPosts : approvedPosts.filter(p => p.category === currentFilter);
+
+            if (filteredPosts.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 text-sm">မည်သည့် စာပေမျှ မရှိသေးပါ။</div>`;
+                return;
+            }
+
+            filteredPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between hover:shadow-lg transition duration-300 w-full";
+                
+                let coverImg = 'https://via.placeholder.com/400x250?text=No+Image';
+                if (post.images && post.images.length > 0) coverImg = post.images[0];
+                else if (post.image) coverImg = post.image;
+
+                card.innerHTML = `
+                    <div class="cursor-pointer" onclick="openReadModal(${post.id})">
+                        <div class="h-32 sm:h-48 w-full overflow-hidden bg-gray-200">
+                            <img src="${coverImg}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded">${post.category}</span>
+                                <span class="text-[11px] text-rose-500 font-bold">❤️ ${post.likes || 0}</span>
+                            </div>
+                            <h3 class="text-sm sm:text-base font-bold text-gray-800 mt-2 line-clamp-1">${post.title}</h3>
+                            <p class="text-xs text-gray-600 mt-1 line-clamp-2">${post.content}</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderHeaderUI() {
+            document.getElementById('header-main-title').textContent = headerSettings.title;
+            document.getElementById('header-sub-title').textContent = headerSettings.subtitle;
+            document.getElementById('page-title').textContent = `${headerSettings.title} - ${headerSettings.subtitle}`;
+
+            const leftImg = document.getElementById('header-left-logo');
+            if (headerSettings.leftLogo) {
+                leftImg.src = headerSettings.leftLogo;
+                leftImg.classList.remove('hidden');
+            } else leftImg.classList.add('hidden');
+
+            const rightImg = document.getElementById('header-right-logo');
+            if (headerSettings.rightLogo) {
+                rightImg.src = headerSettings.rightLogo;
+                rightImg.classList.remove('hidden');
+            } else rightImg.classList.add('hidden');
+        }
+
+        function applyAdBannerConfig() {
+            document.getElementById('ad-banner-container').style.height = adConfig.bannerHeight;
+        }
+
+        function startDirectAdSlideshow() {
+            renderDirectAd();
+            if (adSlideshowTimer) clearInterval(adSlideshowTimer);
+            adSlideshowTimer = setInterval(() => {
+                if (ads.length > 0) {
+                    currentAdIndex = (currentAdIndex + 1) % ads.length;
+                    renderDirectAd();
+                }
+            }, adConfig.speed);
+        }
+
+        function renderDirectAd() {
+            const area = document.getElementById('ad-content-area');
+            if (!ads || ads.length === 0) {
+                area.innerHTML = `<div class="text-sm font-bold text-amber-200">Welcome to ${headerSettings.title}</div>`;
+                return;
+            }
+            const currentAd = ads[currentAdIndex];
+            area.innerHTML = `
+                <div class="flex items-center justify-center gap-3 w-full h-full p-1" title="ကြော်ငြာအသေးစိတ်ဖတ်ရန် နှိပ်ပါ">
+                    ${currentAd.image ? `<img src="${currentAd.image}" class="${adConfig.imageSize} w-auto max-w-[85%] ${adConfig.objectFit} rounded border border-white/40 shadow-md">` : ''}
+                    ${currentAd.text ? `<span class="text-xs sm:text-sm font-semibold text-white line-clamp-1 bg-black/40 px-3 py-1 rounded-full border border-white/20">${currentAd.text}</span>` : ''}
+                </div>
+            `;
+        }
+
+        function openAdDetailModal() {
+            if (!ads || ads.length === 0) return;
+            const currentAd = ads[currentAdIndex];
+            const imgBox = document.getElementById('modal-ad-image-box');
+            const imgEl = document.getElementById('modal-ad-image');
+            const textEl = document.getElementById('modal-ad-text');
+
+            if (currentAd.image) {
+                imgEl.src = currentAd.image;
+                imgBox.classList.remove('hidden');
+            } else imgBox.classList.add('hidden');
+
+            textEl.textContent = currentAd.text || "ကြော်ငြာ စာသား မရှိပါ။";
+            document.getElementById('ad-detail-modal').classList.remove('hidden');
+        }
+
+        function closeAdDetailModal() { document.getElementById('ad-detail-modal').classList.add('hidden'); }
+        function openPostModal() { document.getElementById('post-modal').classList.remove('hidden'); }
+        function closePostModal() { document.getElementById('post-modal').classList.add('hidden'); }
+        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+
+        function login() {
+            if (document.getElementById('admin-password').value === 'iam0') {
+                isAdmin = true;
+                sessionStorage.setItem('isAdmin', 'true');
+                updateAuthUI();
+                closeLoginModal();
+                renderPosts();
+                if (activeReadingPostId) {
+                    const post = posts.find(p => p.id === activeReadingPostId);
+                    if (post) {
+                        renderPostInteractions(post);
+                        document.getElementById('read-admin-actions').classList.remove('hidden');
+                    }
+                }
+                alert('Admin Login အောင်မြင်ပါသည်။');
+            } else alert('Password မှားယွင်းနေပါသည်။');
+        }
+
+        function logout() {
+            isAdmin = false;
+            sessionStorage.removeItem('isAdmin');
+            updateAuthUI();
+            renderPosts();
+            if (activeReadingPostId) {
+                const post = posts.find(p => p.id === activeReadingPostId);
+                if (post) {
+                    renderPostInteractions(post);
+                    document.getElementById('read-admin-actions').classList.add('hidden');
+                }
+            }
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const adminControls = document.getElementById('admin-controls');
+            const adAdminControls = document.getElementById('ad-admin-controls');
+
+            if (isAdmin) {
+                loginBtn.classList.add('hidden');
+                adminControls.classList.remove('hidden');
+                adAdminControls.classList.remove('hidden');
+            } else {
+                loginBtn.classList.remove('hidden');
+                adminControls.classList.add('hidden');
+                adAdminControls.classList.add('hidden');
+            }
+        }
+
+        function renderCategories() {
+            const filterContainer = document.getElementById('category-filters-container');
+            filterContainer.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.onclick = () => filterCategory('all');
+            allBtn.className = currentFilter === 'all' 
+                ? "bg-blue-800 text-white px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow"
+                : "bg-white text-gray-700 hover:bg-blue-100 px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow";
+            allBtn.textContent = 'အားလုံး';
+            filterContainer.appendChild(allBtn);
+
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.onclick = () => filterCategory(cat);
+                btn.className = currentFilter === cat
+                    ? "bg-blue-800 text-white px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow"
+                    : "bg-white text-gray-700 hover:bg-blue-100 px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow";
+                btn.textContent = cat;
+                filterContainer.appendChild(btn);
+            });
+
+            const selectContainer = document.getElementById('post-category');
+            selectContainer.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                selectContainer.appendChild(opt);
+            });
+        }
+
+        function filterCategory(cat) {
+            currentFilter = cat;
+            renderCategories();
+            renderPosts();
+        }
+
+        function openCategoryManageModal() {
+            renderCategoryManageList();
+            document.getElementById('category-manage-modal').classList.remove('hidden');
+        }
+        function closeCategoryManageModal() { document.getElementById('category-manage-modal').classList.add('hidden'); }
+
+        function renderCategoryManageList() {
+            const list = document.getElementById('category-manage-list');
+            list.innerHTML = '';
+            categories.forEach((cat, index) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-gray-100 p-2 rounded text-sm";
+                item.innerHTML = `<span>${cat}</span><button onclick="deleteCategory(${index})" class="text-red-600 text-xs font-bold">🗑️ ဖျက်မည်</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        function addCategory(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-category-name');
+            const newCat = input.value.trim();
+            if (newCat && !categories.includes(newCat)) {
+                categories.push(newCat);
+                localStorage.setItem('christian_categories', JSON.stringify(categories));
+                input.value = '';
+                renderCategoryManageList();
+                renderCategories();
+            }
+        }
+
+        function deleteCategory(index) {
+            categories.splice(index, 1);
+            localStorage.setItem('christian_categories', JSON.stringify(categories));
+            renderCategoryManageList();
+            renderCategories();
+        }
+
+        function updatePendingBadge() {
+            const pendingPosts = posts.filter(p => p.status === 'pending');
+            const badge = document.getElementById('pending-count');
+            if (pendingPosts.length > 0) {
+                badge.textContent = pendingPosts.length;
+                badge.classList.remove('hidden');
+            } else badge.classList.add('hidden');
+        }
+
+        /* Admin Pending Posts Management with Full Preview Support */
+        function openPendingModal() {
+            const container = document.getElementById('pending-list-container');
+            container.innerHTML = '';
+            const pendingPosts = posts.filter(p => p.status === 'pending');
+
+            if (pendingPosts.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">စောင့်ဆိုင်းဆဲ စာမူများ မရှိပါ။</div>`;
+            } else {
+                pendingPosts.forEach(post => {
+                    const item = document.createElement('div');
+                    item.className = "border p-3.5 rounded-lg bg-gray-50 flex flex-col gap-2 hover:bg-gray-100 transition shadow-sm border-gray-200";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-sm sm:text-base text-gray-800">${post.title}</h4>
+                                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">${post.category}</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-medium">✍️ ${post.author}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed bg-white p-2 rounded border border-gray-100">${post.content}</p>
+                        <div class="flex justify-between items-center mt-1 border-t pt-2">
+                            <button onclick="openPendingDetailModal(${post.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded flex items-center gap-1 shadow">
+                                🔍 အသေးစိတ် သေချာဖတ်မည်
+                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="approvePost(${post.id})" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition">✅ လက်ခံမည်</button>
+                                <button onclick="rejectPost(${post.id})" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition">❌ ပယ်ဖျက်မည်</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+            document.getElementById('pending-modal').classList.remove('hidden');
+        }
+
+        function closePendingModal() { document.getElementById('pending-modal').classList.add('hidden'); }
+
+        /* Full Reading Modal for Pending Items */
+        function openPendingDetailModal(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            document.getElementById('pending-detail-title').textContent = post.title;
+            document.getElementById('pending-detail-category').textContent = post.category;
+            document.getElementById('pending-detail-author').textContent = post.author ? `✍️ စာရေးသူ: ${post.author}` : 'အမည်မသိ';
+            document.getElementById('pending-detail-content').textContent = post.content;
+
+            const imagesContainer = document.getElementById('pending-detail-images');
+            imagesContainer.innerHTML = '';
+            
+            const images = post.images && post.images.length > 0 ? post.images : (post.image ? [post.image] : []);
+            
+            if (images.length > 0) {
+                imagesContainer.classList.remove('hidden');
+                images.forEach(imgUrl => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.className = "w-full h-48 object-cover rounded-lg border shadow-sm";
+                    imagesContainer.appendChild(img);
+                });
+            } else {
+                imagesContainer.classList.add('hidden');
+            }
+
+            // Set Action Handlers
+            document.getElementById('pending-approve-btn').onclick = function() {
+                approvePost(id);
+                closePendingDetailModal();
+            };
+            document.getElementById('pending-reject-btn').onclick = function() {
+                rejectPost(id);
+                closePendingDetailModal();
+            };
+
+            document.getElementById('pending-detail-modal').classList.remove('hidden');
+        }
+
+        function closePendingDetailModal() {
+            document.getElementById('pending-detail-modal').classList.add('hidden');
+        }
+
+        function approvePost(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.status = 'approved';
+                localStorage.setItem('christian_posts', JSON.stringify(posts));
+                openPendingModal();
+                updatePendingBadge();
+                renderPosts();
+            }
+        }
+
+        function rejectPost(id) {
+            if (confirm("ဤစောင့်ဆိုင်းဆဲ စာမူကို ပယ်ဖျက်ရန် သေချာပါသလား?")) {
+                posts = posts.filter(p => p.id !== id);
+                localStorage.setItem('christian_posts', JSON.stringify(posts));
+                openPendingModal();
+                updatePendingBadge();
+                renderPosts();
+            }
+        }
+
+        function openAdUploadModal() { document.getElementById('ad-upload-modal').classList.remove('hidden'); }
+        function closeAdUploadModal() { document.getElementById('ad-upload-modal').classList.add('hidden'); }
+
+        let adBase64 = "";
+        function handleAdImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) { adBase64 = evt.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveAd(e) {
+            e.preventDefault();
+            const text = document.getElementById('ad-text').value;
+            const url = document.getElementById('ad-url').value;
+            ads.push({ id: Date.now(), text, image: adBase64 || url || "" });
+            localStorage.setItem('christian_ads', JSON.stringify(ads));
+            closeAdUploadModal();
+            startDirectAdSlideshow();
+            alert('ကြော်ငြာ တင်လိုက်ပါပြီ။');
+        }
+
+        function openAdManageModal() {
+            const container = document.getElementById('ad-list-container');
+            container.innerHTML = '';
+            ads.forEach(ad => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between border p-2 rounded bg-gray-50";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        ${ad.image ? `<img src="${ad.image}" class="h-8 w-8 object-cover rounded">` : ''}
+                        <span class="text-xs truncate">${ad.text || 'Image Ad'}</span>
+                    </div>
+                    <button onclick="deleteAd(${ad.id})" class="bg-red-600 text-white text-xs px-2 py-1 rounded">Del</button>
+                `;
+                container.appendChild(item);
+            });
+            document.getElementById('ad-manage-modal').classList.remove('hidden');
+        }
+
+        function closeAdManageModal() { document.getElementById('ad-manage-modal').classList.add('hidden'); }
+
+        function deleteAd(id) {
+            ads = ads.filter(a => a.id !== id);
+            localStorage.setItem('christian_ads', JSON.stringify(ads));
+            openAdManageModal();
+            startDirectAdSlideshow();
+        }
+
+        function openHeaderEditModal() {
+            document.getElementById('edit-header-title').value = headerSettings.title;
+            document.getElementById('edit-header-subtitle').value = headerSettings.subtitle;
+            document.getElementById('edit-left-logo-url').value = headerSettings.leftLogo && !headerSettings.leftLogo.startsWith('data:') ? headerSettings.leftLogo : '';
+            document.getElementById('edit-right-logo-url').value = headerSettings.rightLogo && !headerSettings.rightLogo.startsWith('data:') ? headerSettings.rightLogo : '';
+            document.getElementById('header-edit-modal').classList.remove('hidden');
+        }
+
+        function closeHeaderEditModal() { document.getElementById('header-edit-modal').classList.add('hidden'); }
+
+        let leftLogoBase64 = "";
+        let rightLogoBase64 = "";
+
+        function handleLogoUpload(event, side) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (side === 'left') leftLogoBase64 = e.target.result;
+                    if (side === 'right') rightLogoBase64 = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveHeaderSettings(e) {
+            e.preventDefault();
+            headerSettings.title = document.getElementById('edit-header-title').value.trim();
+            headerSettings.subtitle = document.getElementById('edit-header-subtitle').value.trim();
+            const leftUrl = document.getElementById('edit-left-logo-url').value.trim();
+            const rightUrl = document.getElementById('edit-right-logo-url').value.trim();
+
+            headerSettings.leftLogo = leftLogoBase64 || leftUrl || headerSettings.leftLogo;
+            headerSettings.rightLogo = rightLogoBase64 || rightUrl || headerSettings.rightLogo;
+
+            localStorage.setItem('christian_header', JSON.stringify(headerSettings));
+            renderHeaderUI();
+            closeHeaderEditModal();
+        }
+
+        function openAdConfigModal() {
+            document.getElementById('cfg-ad-speed').value = adConfig.speed;
+            document.getElementById('cfg-ad-img-size').value = adConfig.imageSize;
+            document.getElementById('cfg-ad-fit').value = adConfig.objectFit;
+            const hVal = parseInt(adConfig.bannerHeight) || 90;
+            document.getElementById('cfg-banner-height').value = hVal;
+            document.getElementById('banner-h-val').textContent = hVal + "px";
+            document.getElementById('ad-config-modal').classList.remove('hidden');
+        }
+
+        function closeAdConfigModal() { document.getElementById('ad-config-modal').classList.add('hidden'); }
+
+        function saveAdConfig(e) {
+            e.preventDefault();
+            adConfig.speed = parseInt(document.getElementById('cfg-ad-speed').value);
+            adConfig.imageSize = document.getElementById('cfg-ad-img-size').value;
+            adConfig.objectFit = document.getElementById('cfg-ad-fit').value;
+            adConfig.bannerHeight = document.getElementById('cfg-banner-height').value + "px";
+
+            localStorage.setItem('christian_ad_config', JSON.stringify(adConfig));
+            applyAdBannerConfig();
+            startDirectAdSlideshow();
+            closeAdConfigModal();
+        }
+    </script>
+</body>
+</html>
