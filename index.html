@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site-title">Bread of Life - ခရစ်ယာန်စာပေ နှင့် တရားဒေသနာများ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Pyidaungsu', sans-serif, system-ui; }
+        
+        .custom-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .custom-grid { gap: 1rem; }
+        }
+
+        @media (min-width: 1024px) {
+            .custom-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Toast Animation */
+        #toast-notification {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* Loading Screen Styles */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            items-center: center;
+            z-index: 9999;
+        }
+        .loader-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen relative">
+
+    <!-- Loading Spinner / Notification -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p class="text-sm font-semibold text-gray-700">ခေတ္တစောင့်ဆိုင်းပါ၊ ဒေတာများ ရယူနေပါသည်...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Navbar -->
+    <nav class="bg-blue-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-3 py-3 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+            <div class="text-center md:text-left">
+                <h1 id="nav-main-title" class="text-xl md:text-3xl font-bold tracking-wide"> 🍞 အသက်မုန့် 🍞</h1>
+                <p id="nav-sub-title" class="text-xs md:text-base text-blue-200 mt-0.5 font-medium">✝️ခရစ်ယာန်စာပေ နှင့် တရားဒေသနာများ✝</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <button onclick="openUserPostModal()" id="btn-user-post" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition flex items-center gap-1">
+                    ✍️ စာ/တရား တင်ရန်
+                </button>
+
+                <div id="auth-section">
+                    <button onclick="openLoginModal()" id="login-btn" class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition">
+                        Admin Login
+                    </button>
+                    <div id="admin-controls" class="hidden flex items-center gap-2">
+                        <button onclick="openPendingModal()" id="btn-pending" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition relative">
+                            📥 စစ်ဆေးရန် <span id="pending-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+                        </button>
+                        <button onclick="openCategoryModal()" id="btn-category-manage" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition">
+                            ⚙ Categories စီမံရန်
+                        </button>
+                        <button onclick="openButtonTextModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition">
+                            ✏️ ခလုတ်စာသားပြင်ရန်
+                        </button>
+                        <button onclick="openPostModal()" id="btn-admin-post" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition">
+                            + ပို့စ် (Admin)
+                        </button>
+                        <button onclick="logout()" id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4">
+        <div id="category-buttons-container" class="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-8 justify-center"></div>
+        <div id="posts-grid" class="custom-grid"></div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Login</h2>
+            <input type="password" id="admin-password" placeholder="Password ထည့်ပါ" class="w-full border p-2 rounded mb-4 focus:outline-blue-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeLoginModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">မလုပ်တော့ပါ</button>
+                <button onclick="login()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Button Text Customizer Modal -->
+    <div id="button-text-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">✏️ ခလုတ်စာသားများ ပြင်ဆင်ရန်</h2>
+            <form onsubmit="saveButtonTexts(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">စာ/တရား တင်ရန် ခလုတ်စာသား</label>
+                    <input type="text" id="edit-text-user-post" class="w-full border p-2 rounded text-sm focus:outline-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">စစ်ဆေးရန် ခလုတ်စာသား</label>
+                    <input type="text" id="edit-text-pending" class="w-full border p-2 rounded text-sm focus:outline-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Categories စီမံရန် ခလုတ်စာသား</label>
+                    <input type="text" id="edit-text-category" class="w-full border p-2 rounded text-sm focus:outline-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့စ် (Admin) ခလုတ်စာသား</label>
+                    <input type="text" id="edit-text-admin-post" class="w-full border p-2 rounded text-sm focus:outline-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Logout ခလုတ်စာသား</label>
+                    <input type="text" id="edit-text-logout" class="w-full border p-2 rounded text-sm focus:outline-blue-500" required>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeButtonTextModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-semibold hover:bg-indigo-700">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Pending Posts Approval Modal -->
+    <div id="pending-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">📥 User တင်ထားသော စာပေများ (စစ်ဆေးရန်)</h2>
+            <div id="pending-posts-container" class="space-y-4 mb-6"></div>
+            <div class="flex justify-end">
+                <button onclick="closePendingModal()" class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Category Management Modal -->
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">⚙️ Category များကို စီမံရန်</h2>
+            <form onsubmit="addNewCategory(event)" class="mb-4 flex gap-2">
+                <input type="text" id="new-category-name" placeholder="Category အသစ်အမည်..." required class="flex-1 border p-2 rounded text-sm focus:outline-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold">ထည့်မည်</button>
+            </form>
+            <hr class="mb-4">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">လက်ရှိ Category များ (ပြင်ဆင်ရန် / ဖျက်ရန်)</h3>
+            <div id="category-list-manager" class="space-y-2 mb-6 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="flex justify-end">
+                <button onclick="closeCategoryModal()" class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Submit Post Modal -->
+    <div id="user-post-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-2 text-gray-800">✍️ စာပေ / တရားဒေသနာ ပေးပို့ရန်</h2>
+            <p class="text-xs text-gray-500 mb-4">သင်ပေးပို့သော အချက်အလက်များကို Admin စစ်ဆေးအတည်ပြုပြီးမှ ပင်မစာမျက်နှာတွင် ဖော်ပြပေးပါမည်။</p>
+            
+            <form id="user-post-form" onsubmit="submitUserPost(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ခေါင်းစဉ် (Title)</label>
+                    <input type="text" id="user-post-title" required class="w-full border p-2 rounded focus:outline-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">သင့်နာမည် / စာရေးသူ (Author)</label>
+                    <input type="text" id="user-post-author" placeholder="ဥပမာ - မောင်မောင်" required class="w-full border p-2 rounded focus:outline-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">အမျိုးအစား (Category)</label>
+                    <select id="user-post-category" required class="w-full border p-2 rounded focus:outline-blue-500"></select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ဓာတ်ပုံများ ထည့်ရန် (Images)</label>
+                    <input type="file" id="user-image-files" accept="image/*" multiple class="w-full border p-1 rounded mb-2 text-sm" onchange="handleUserImagesUpload(event)">
+                    <textarea id="user-image-urls" placeholder="သို့မဟုတ် ပုံ URL များကို တစ်ကြောင်းစီ ခွဲထည့်ပါ" rows="2" class="w-full border p-2 rounded focus:outline-blue-500 text-sm"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">အကြောင်းအရာ (Content Text)</label>
+                    <textarea id="user-post-content" rows="5" required class="w-full border p-2 rounded focus:outline-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeUserPostModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700">ပေးပို့မည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Direct Post Modal -->
+    <div id="post-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 id="modal-title" class="text-xl font-bold mb-4 text-gray-800">စာပေ/တရားဒေသနာ တင်ရန်</h2>
+            <form id="post-form" onsubmit="savePost(event)">
+                <input type="hidden" id="post-doc-id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ခေါင်းစဉ် (Title)</label>
+                    <input type="text" id="post-title" required class="w-full border p-2 rounded focus:outline-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">စာရေးသူ / ဟောပြောသူ (Author)</label>
+                    <input type="text" id="post-author" placeholder="ဥပမာ - ဆရာစတီဗင်" class="w-full border p-2 rounded focus:outline-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">အမျိုးအစား (Category)</label>
+                    <select id="post-category" required class="w-full border p-2 rounded focus:outline-blue-500"></select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ဓာတ်ပုံများ (Multiple Images Upload)</label>
+                    <input type="file" id="post-image-files" accept="image/*" multiple class="w-full border p-1 rounded mb-2 text-sm" onchange="handleMultipleImagesUpload(event)">
+                    <textarea id="post-image-urls" placeholder="သို့မဟုတ် ပုံ URL များကို တစ်ကြောင်းစီ ခွဲထည့်ပါ" rows="2" class="w-full border p-2 rounded focus:outline-blue-500 text-sm"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">အကြောင်းအရာ စာသား (Content Text)</label>
+                    <textarea id="post-content" rows="6" required class="w-full border p-2 rounded focus:outline-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closePostModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Read Full Post & Feedback Modal (With Customizer) -->
+    <div id="read-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-2 md:p-4">
+        <div id="reader-container" class="bg-white rounded-lg p-4 md:p-6 w-full max-w-3xl shadow-xl max-h-[95vh] overflow-y-auto transition-colors duration-200">
+            
+            <!-- Customizer Controls Bar -->
+            <div class="bg-gray-100 p-2.5 rounded-lg mb-4 flex flex-wrap items-center justify-between gap-3 text-xs border">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-700">🔤 စာသားအရွယ်အစား:</span>
+                    <button onclick="changeFontSize(-2)" class="px-2 py-1 bg-white border rounded hover:bg-gray-200 font-bold">- သေး</button>
+                    <button onclick="changeFontSize(2)" class="px-2 py-1 bg-white border rounded hover:bg-gray-200 font-bold">+ ကြီး</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-700">🎨 စာသားအရောင်:</span>
+                    <input type="color" id="text-color-picker" value="#374151" onchange="changeTextColor(this.value)" class="w-7 h-7 rounded border cursor-pointer">
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-700">🌄 နောက်ခံအရောင်:</span>
+                    <input type="color" id="bg-color-picker" value="#ffffff" onchange="changeBgColor(this.value)" class="w-7 h-7 rounded border cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-2">
+                <span id="read-category" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded font-semibold"></span>
+                <span id="read-author" class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded"></span>
+            </div>
+            
+            <h2 id="read-title" class="text-xl md:text-2xl font-bold mb-4 text-gray-900"></h2>
+            <div id="read-images-container" class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4"></div>
+            
+            <div id="read-content" class="leading-relaxed whitespace-pre-line mb-6 text-sm md:text-base p-3 rounded"></div>
+            
+            <hr class="my-4">
+
+            <!-- Feedback Section -->
+            <div class="mt-4">
+                <h3 class="text-base font-bold text-gray-800 mb-3">💬 သုံးသပ်ချက်များနှင့် အကြံပြုချက်များ (Feedbacks)</h3>
+                
+                <form onsubmit="submitFeedback(event)" class="mb-6 bg-gray-50 p-3 rounded-lg border">
+                    <input type="hidden" id="feedback-post-id">
+                    <div class="mb-2">
+                        <input type="text" id="feedback-author" placeholder="သင့်နာမည် (သို့) အမည်မဖော်လိုပါက..." required class="w-full text-xs md:text-sm border p-2 rounded bg-white focus:outline-blue-500">
+                    </div>
+                    <div class="mb-2">
+                        <textarea id="feedback-text" rows="2" placeholder="အကြံပြုချက် သို့မဟုတ် မှတ်ချက်ရေးရန်..." required class="w-full text-xs md:text-sm border p-2 rounded bg-white focus:outline-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm px-4 py-1.5 rounded font-semibold">မှတ်ချက်ပေးမည်</button>
+                    </div>
+                </form>
+
+                <div id="feedbacks-list" class="space-y-3 mb-4"></div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="closeReadModal()" class="px-5 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Feedback Modal (For Admin) -->
+    <div id="edit-feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">✏ Feedback ကို ပြင်ဆင်ရန် (Admin)</h2>
+            <form onsubmit="updateFeedback(event)">
+                <input type="hidden" id="edit-fb-post-id">
+                <input type="hidden" id="edit-fb-index">
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">မှတ်ချက် စာသား</label>
+                    <textarea id="edit-fb-text" rows="4" required class="w-full border p-2 rounded text-sm focus:outline-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeEditFeedbackModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm">မလုပ်တော့ပါ</button>
+                    <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-sm font-semibold">သိမ်းဆည်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & App Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, doc, updateDoc, deleteDoc, setDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChBNizWMcHdGIsz8fImNbiV1E6WrTBkec",
+            authDomain: "bread-of-life-76c01.firebaseapp.com",
+            projectId: "bread-of-life-76c01",
+            storageBucket: "bread-of-life-76c01.firebasestorage.app",
+            messagingSenderId: "656226635188",
+            appId: "1:656226635188:web:9d1100e140f67a5ab676e1",
+            measurementId: "G-EC6H6BX41B"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
+
+        let posts = [];
+        let pendingPosts = [];
+        let categories = ["ခရစ်ယာန်စာပေ", "ကဗျာ", "သတင်း", "တရားဒေသနာများ", "ဘာသာပြန်စာပေ", "သီအိုလော်ဂျီစာပေ"];
+        
+        let buttonTexts = {
+            userPost: "✍️ စာ/တရား တင်ရန်",
+            pending: "📥 စစ်ဆေးရန်",
+            categoryManage: "⚙ Categories စီမံရန်",
+            adminPost: "+ ပို့စ် (Admin)",
+            logout: "Logout"
+        };
+
+        let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+        let currentFilter = 'all';
+        let base64Images = [];
+        let userBase64Images = [];
+        let currentActivePostId = null;
+
+        function hideLoadingScreen() {
+            const loader = document.getElementById('loading-screen');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-emerald-600 text-white';
+            if (type === 'error') bgClass = 'bg-red-600 text-white';
+            if (type === 'info') bgClass = 'bg-blue-600 text-white';
+
+            toast.className = `pointer-events-auto px-4 py-3 rounded-lg shadow-lg font-semibold text-xs md:text-sm flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 ${bgClass}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAuthUI();
+            fetchSettingsRealtime();
+            fetchPostsRealtime();
+            fetchPendingPostsRealtime();
+        });
+
+        function fetchSettingsRealtime() {
+            const settingsDocRef = doc(db, "settings", "config");
+            onSnapshot(settingsDocRef, async (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.list && Array.isArray(data.list)) {
+                        categories = data.list;
+                    }
+                    if (data.buttonTexts) {
+                        buttonTexts = { ...buttonTexts, ...data.buttonTexts };
+                    }
+                } else {
+                    try {
+                        await setDoc(settingsDocRef, { list: categories, buttonTexts });
+                    } catch (e) {
+                        console.error("Error creating default settings:", e);
+                    }
+                }
+                renderCategoryUI();
+                renderButtonTextsUI();
+            }, (error) => {
+                console.error("Settings snapshot error:", error);
+            });
+        }
+
+        function renderButtonTextsUI() {
+            document.getElementById('btn-user-post').innerHTML = `${buttonTexts.userPost}`;
+            
+            const pendingBadgeHTML = `<span id="pending-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>`;
+            document.getElementById('btn-pending').innerHTML = `${buttonTexts.pending} ${pendingBadgeHTML}`;
+            
+            document.getElementById('btn-category-manage').innerHTML = `${buttonTexts.categoryManage}`;
+            document.getElementById('btn-admin-post').innerHTML = `${buttonTexts.adminPost}`;
+            document.getElementById('btn-logout').innerHTML = `${buttonTexts.logout}`;
+        }
+
+        window.openButtonTextModal = function() {
+            document.getElementById('edit-text-user-post').value = buttonTexts.userPost;
+            document.getElementById('edit-text-pending').value = buttonTexts.pending;
+            document.getElementById('edit-text-category').value = buttonTexts.categoryManage;
+            document.getElementById('edit-text-admin-post').value = buttonTexts.adminPost;
+            document.getElementById('edit-text-logout').value = buttonTexts.logout;
+            document.getElementById('button-text-modal').classList.remove('hidden');
+        }
+
+        window.closeButtonTextModal = function() {
+            document.getElementById('button-text-modal').classList.add('hidden');
+        }
+
+        window.saveButtonTexts = async function(event) {
+            event.preventDefault();
+            buttonTexts.userPost = document.getElementById('edit-text-user-post').value.trim();
+            buttonTexts.pending = document.getElementById('edit-text-pending').value.trim();
+            buttonTexts.categoryManage = document.getElementById('edit-text-category').value.trim();
+            buttonTexts.adminPost = document.getElementById('edit-text-admin-post').value.trim();
+            buttonTexts.logout = document.getElementById('edit-text-logout').value.trim();
+
+            try {
+                await saveSettingsToFirebase();
+                closeButtonTextModal();
+                showToast("ခလုတ်စာသားများကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။", "success");
+            } catch (error) {
+                showToast("ခလုတ်စာသားများ သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိပါသည်။", "error");
+            }
+        }
+
+        function renderCategoryUI() {
+            const filterContainer = document.getElementById('category-buttons-container');
+            filterContainer.innerHTML = `<button onclick="filterCategory('all')" class="cat-btn ${currentFilter === 'all' ? 'bg-blue-800 text-white' : 'bg-white text-gray-700 hover:bg-blue-100'} px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow transition">အားလုံး</button>`;
+
+            categories.forEach(cat => {
+                const isActive = currentFilter === cat;
+                const btnClass = isActive ? 'bg-blue-800 text-white' : 'bg-white text-gray-700 hover:bg-blue-100';
+                filterContainer.innerHTML += `<button onclick="filterCategory('${cat}')" class="cat-btn ${btnClass} px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow transition">${cat}</button>`;
+            });
+
+            const selects = ['user-post-category', 'post-category'];
+            selects.forEach(selId => {
+                const sel = document.getElementById(selId);
+                if (sel) {
+                    const currentVal = sel.value;
+                    sel.innerHTML = '';
+                    categories.forEach(cat => {
+                        sel.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                    if (categories.includes(currentVal)) sel.value = currentVal;
+                }
+            });
+
+            const managerList = document.getElementById('category-list-manager');
+            if (managerList) {
+                managerList.innerHTML = '';
+                categories.forEach((cat, index) => {
+                    managerList.innerHTML += `
+                        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
+                            <input type="text" id="cat-input-${index}" value="${cat}" class="flex-1 border p-1 rounded text-xs bg-white focus:outline-blue-500">
+                            <button type="button" onclick="updateCategoryName(${index})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2.5 py-1 rounded text-xs font-semibold">ပြင်မည်</button>
+                            <button type="button" onclick="deleteCategory(${index})" class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded text-xs font-semibold">ဖျက်မည်</button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        window.openCategoryModal = function() { document.getElementById('category-modal').classList.remove('hidden'); }
+        window.closeCategoryModal = function() { document.getElementById('category-modal').classList.add('hidden'); }
+
+        window.addNewCategory = async function(event) {
+            event.preventDefault();
+            const inputVal = document.getElementById('new-category-name').value.trim();
+            if (!inputVal) return;
+            if (categories.includes(inputVal)) { 
+                showToast("ဤ Category သည် ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။", "error"); 
+                return; 
+            }
+            
+            categories.push(inputVal);
+            renderCategoryUI();
+            document.getElementById('new-category-name').value = '';
+
+            try {
+                await saveSettingsToFirebase();
+                showToast("Category အသစ် ထည့်သွင်းပြီး သိမ်းဆည်းပြီးပါပြီ။", "success");
+            } catch (error) {
+                console.error("Add category error:", error);
+                showToast("Firebase သို့ သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိပါသည်။", "error");
+            }
+        }
+
+        window.updateCategoryName = async function(index) {
+            const inputVal = document.getElementById(`cat-input-${index}`).value.trim();
+            if (!inputVal) { 
+                showToast("အမည် အလွတ်ထား၍ မရပါ။", "error"); 
+                return; 
+            }
+            categories[index] = inputVal;
+            renderCategoryUI();
+
+            try {
+                await saveSettingsToFirebase();
+                showToast("Category အမည်ကို ပြင်ဆင်ပြီး သိမ်းဆည်းပြီးပါပြီ။", "success");
+            } catch (error) {
+                console.error("Update category error:", error);
+                showToast("Firebase သို့ သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိပါသည်။", "error");
+            }
+        }
+
+        window.deleteCategory = async function(index) {
+            if (categories.length <= 1) { 
+                showToast("Category အနည်းဆုံး တစ်ခုတော့ ရှိရပါမည်။", "error"); 
+                return; 
+            }
+            if (confirm(`"${categories[index]}" ကို ဖျက်ရန် သေချာပါသလား?`)) {
+                categories.splice(index, 1);
+                renderCategoryUI();
+
+                try {
+                    await saveSettingsToFirebase();
+                    showToast("Category ကို ဖျက်ပြီး သိမ်းဆည်းပြီးပါပြီ။", "success");
+                } catch (error) {
+                    console.error("Delete category error:", error);
+                    showToast("Firebase သို့ သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိပါသည်။", "error");
+                }
+            }
+        }
+
+        async function saveSettingsToFirebase() {
+            const settingsDocRef = doc(db, "settings", "config");
+            await setDoc(settingsDocRef, { 
+                list: categories, 
+                buttonTexts: buttonTexts 
+            }, { merge: true });
+        }
+
+        window.openLoginModal = function() { document.getElementById('login-modal').classList.remove('hidden'); }
+        window.closeLoginModal = function() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('admin-password').value = ''; }
+
+        window.login = function() {
+            if (document.getElementById('admin-password').value === 'iamo') {
+                isAdmin = true;
+                sessionStorage.setItem('isAdmin', 'true');
+                updateAuthUI();
+                closeLoginModal();
+                renderPosts();
+                if(currentActivePostId) renderFeedbacks(currentActivePostId);
+                showToast('Admin အဖြစ် အောင်မြင်စွာ Login ဝင်လိုက်ပါပြီ။', 'success');
+            } else { showToast('Password မှားယွင်းနေပါသည်။', 'error'); }
+        }
+
+        window.logout = function() {
+            isAdmin = false;
+            sessionStorage.removeItem('isAdmin');
+            updateAuthUI();
+            renderPosts();
+            if(currentActivePostId) renderFeedbacks(currentActivePostId);
+            showToast('Admin အကောင့်မှ ထွက်လိုက်ပါပြီ။', 'info');
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const adminControls = document.getElementById('admin-controls');
+            if (isAdmin) { loginBtn.classList.add('hidden'); adminControls.classList.remove('hidden'); }
+            else { loginBtn.classList.remove('hidden'); adminControls.classList.add('hidden'); }
+        }
+
+        function fetchPostsRealtime() {
+            onSnapshot(query(collection(db, "posts")), (snapshot) => {
+                posts = [];
+                snapshot.forEach((docSnap) => {
+                    posts.push({ docId: docSnap.id, ...docSnap.data() });
+                });
+                posts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderPosts();
+                if(currentActivePostId) renderFeedbacks(currentActivePostId);
+                hideLoadingScreen();
+            }, (error) => {
+                console.error("Posts fetch error:", error);
+                hideLoadingScreen();
+            });
+        }
+
+        function fetchPendingPostsRealtime() {
+            onSnapshot(query(collection(db, "pendingPosts")), (snapshot) => {
+                pendingPosts = [];
+                snapshot.forEach((docSnap) => {
+                    pendingPosts.push({ docId: docSnap.id, ...docSnap.data() });
+                });
+                pendingPosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                
+                const badge = document.getElementById('pending-badge');
+                if (badge) {
+                    if (pendingPosts.length > 0) { badge.textContent = pendingPosts.length; badge.classList.remove('hidden'); }
+                    else { badge.classList.add('hidden'); }
+                }
+                renderPendingManagerUI();
+            });
+        }
+
+        window.openPendingModal = function() { document.getElementById('pending-modal').classList.remove('hidden'); }
+        window.closePendingModal = function() { document.getElementById('pending-modal').classList.add('hidden'); }
+
+        function renderPendingManagerUI() {
+            const container = document.getElementById('pending-posts-container');
+            if (!container) return;
+            if (pendingPosts.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 text-sm py-4">စောင့်ဆိုင်းနေသော ပို့စ်များ မရှိသေးပါ။</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            pendingPosts.forEach(post => {
+                let imagesHTML = '';
+                (post.images || []).forEach(img => { imagesHTML += `<img src="${img}" class="w-16 h-16 object-cover rounded border">`; });
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 p-4 rounded-lg border flex flex-col gap-2 shadow-sm";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-semibold">${post.category}</span>
+                            <h3 class="font-bold text-gray-800 text-base mt-1">${post.title}</h3>
+                            <p class="text-xs text-gray-500">တင်သွင်းသူ - ${post.author || 'အမည်မသိ'}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="approvePendingPost('${post.docId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-semibold">အတည်ပြုမည်</button>
+                            <button onclick="rejectPendingPost('${post.docId}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-semibold">ပယ်ချမည်</button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-700 mt-1 line-clamp-3">${post.content}</p>
+                    <div class="flex gap-1 flex-wrap mt-2">${imagesHTML}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.approvePendingPost = async function(docId) {
+            const post = pendingPosts.find(p => p.docId === docId);
+            if (!post) return;
+            try {
+                await addDoc(collection(db, "posts"), {
+                    title: post.title, author: post.author, category: post.category,
+                    content: post.content, images: post.images || [], feedbacks: [], createdAt: post.createdAt || Date.now()
+                });
+                await deleteDoc(doc(db, "pendingPosts", docId));
+                showToast("ပို့စ်ကို အတည်ပြုပြီး ပင်မစာမျက်နှာသို့ အောင်မြင်စွာ တင်လိုက်ပါပြီ။", "success");
+            } catch (e) { showToast("အတည်ပြုရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+        }
+
+        window.rejectPendingPost = async function(docId) {
+            if (confirm("ဤပို့စ်ကို ဖျက်ရန်/ပယ်ချရန် သေချာပါသလား?")) {
+                await deleteDoc(doc(db, "pendingPosts", docId));
+                showToast("ပို့စ်ကို ပယ်ချပြီးပါပြီ။", "info");
+            }
+        }
+
+        function renderPosts() {
+            const grid = document.getElementById('posts-grid');
+            grid.innerHTML = '';
+            const filteredPosts = currentFilter === 'all' ? posts : posts.filter(p => p.category === currentFilter);
+
+            if (filteredPosts.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 text-sm">မည်သည့် စာပေမျှ မရှိသေးပါ။</div>`;
+                return;
+            }
+
+            filteredPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-md md:rounded-lg shadow overflow-hidden flex flex-col justify-between hover:shadow-lg transition duration-300 w-full";
+                const postImages = (post.images && post.images.length > 0) ? post.images : [];
+                const coverImg = postImages[0] || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=600&auto=format&fit=crop';
+                
+                card.innerHTML = `
+                    <div class="cursor-pointer" onclick="openReadModelEvent('${post.docId}')">
+                        <div class="h-24 sm:h-36 md:h-48 w-full overflow-hidden bg-gray-200 relative">
+                            <img src="${coverImg}" alt="${post.title}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                            ${postImages.length > 1 ? `<span class="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-[9px] sm:text-xs px-1.5 py-0.5 rounded">🖼️ ${postImages.length}</span>` : ''}
+                        </div>
+                        <div class="p-1.5 sm:p-3">
+                            <div class="flex justify-between items-center gap-1">
+                                <span class="text-[9px] sm:text-xs bg-blue-100 text-blue-800 font-semibold px-1 py-0.2 rounded">${post.category}</span>
+                                <span class="text-[9px] sm:text-xs text-gray-500 truncate">${post.author ? `✍ ${post.author}` : ''}</span>
+                            </div>
+                            <h3 class="text-xs sm:text-base font-bold text-gray-800 mt-1 line-clamp-1 sm:line-clamp-2">${post.title}</h3>
+                            <p class="text-[10px] sm:text-xs text-gray-600 mt-0.5 line-clamp-2">${post.content}</p>
+                        </div>
+                    </div>
+                    ${isAdmin ? `
+                    <div class="p-1.5 sm:p-3 pt-0 flex justify-end gap-1 border-t mt-1 border-gray-100">
+                        <button onclick="editPostEvent('${post.docId}')" class="text-[10px] sm:text-xs bg-yellow-500 text-white px-1.5 py-0.5 rounded">Edit</button>
+                        <button onclick="deletePostEvent('${post.docId}')" class="text-[10px] sm:text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">Del</button>
+                    </div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.filterCategory = function(cat) { currentFilter = cat; renderCategoryUI(); renderPosts(); }
+
+        let currentFontSize = 16;
+        window.openReadModelEvent = function(docId) {
+            currentActivePostId = docId;
+            const post = posts.find(p => p.docId === docId);
+            if (!post) return;
+
+            document.getElementById('read-title').textContent = post.title;
+            document.getElementById('read-category').textContent = post.category;
+            document.getElementById('read-author').textContent = post.author ? `စာရေးသူ - ${post.author}` : '';
+            
+            const contentBox = document.getElementById('read-content');
+            contentBox.textContent = post.content;
+            
+            currentFontSize = 16;
+            contentBox.style.fontSize = currentFontSize + 'px';
+            contentBox.style.color = '#374151';
+            document.getElementById('reader-container').style.backgroundColor = '#ffffff';
+            document.getElementById('text-color-picker').value = '#374151';
+            document.getElementById('bg-color-picker').value = '#ffffff';
+
+            document.getElementById('feedback-post-id').value = docId;
+            
+            const imgContainer = document.getElementById('read-images-container');
+            imgContainer.innerHTML = '';
+            (post.images || []).forEach(img => {
+                const imgTag = document.createElement('img');
+                imgTag.src = img;
+                imgTag.className = "w-full h-48 md:h-64 object-cover rounded-lg border";
+                imgContainer.appendChild(imgTag);
+            });
+
+            renderFeedbacks(docId);
+            document.getElementById('read-modal').classList.remove('hidden');
+        }
+
+        window.closeReadModal = function() { 
+            document.getElementById('read-modal').classList.add('hidden'); 
+            currentActivePostId = null;
+        }
+
+        window.changeFontSize = function(delta) {
+            currentFontSize = Math.max(12, Math.min(28, currentFontSize + delta));
+            document.getElementById('read-content').style.fontSize = currentFontSize + 'px';
+        }
+
+        window.changeTextColor = function(color) {
+            document.getElementById('read-content').style.color = color;
+        }
+
+        window.changeBgColor = function(color) {
+            document.getElementById('reader-container').style.backgroundColor = color;
+        }
+
+        window.submitFeedback = async function(event) {
+            event.preventDefault();
+            const docId = document.getElementById('feedback-post-id').value;
+            const author = document.getElementById('feedback-author').value.trim();
+            const text = document.getElementById('feedback-text').value.trim();
+            if (!docId || !text) return;
+
+            const post = posts.find(p => p.docId === docId);
+            if (!post) return;
+
+            const newFeedback = { author: author || 'အမည်မဖော်လိုသူ', text, createdAt: Date.now() };
+            const feedbacks = post.feedbacks || [];
+            feedbacks.push(newFeedback);
+
+            try {
+                await updateDoc(doc(db, "posts", docId), { feedbacks });
+                document.getElementById('feedback-text').value = '';
+                document.getElementById('feedback-author').value = '';
+                showToast("မှတ်ချက်ကို အောင်မြင်စွာ တင်သွင်းပြီးပါပြီ။", "success");
+            } catch (e) { showToast("မှတ်ချက်ပေးပို့ရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+        }
+
+        function renderFeedbacks(docId) {
+            const post = posts.find(p => p.docId === docId);
+            const container = document.getElementById('feedbacks-list');
+            if (!container || !post) return;
+
+            const feedbacks = post.feedbacks || [];
+            if (feedbacks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 italic">မှတ်ချက် မရှိသေးပါ။ ပထမဆုံး မှတ်ချက်ပေးသူ ဖြစ်ပါစေ။</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            feedbacks.forEach((fb, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 p-2.5 rounded border text-xs flex flex-col gap-1";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-700">👤 ${fb.author}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-gray-400">${new Date(fb.createdAt || Date.now()).toLocaleDateString()}</span>
+                            ${isAdmin ? `
+                                <button onclick="openEditFeedbackModal('${docId}',${index})" class="text-yellow-600 hover:underline font-semibold">Edit</button>
+                                <button onclick="deleteFeedback('${docId}',${index})" class="text-red-600 hover:underline font-semibold">Del</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <p class="text-gray-600 whitespace-pre-line">${fb.text}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.openEditFeedbackModal = function(docId, index) {
+            const post = posts.find(p => p.docId === docId);
+            if (!post || !post.feedbacks[index]) return;
+            document.getElementById('edit-fb-post-id').value = docId;
+            document.getElementById('edit-fb-index').value = index;
+            document.getElementById('edit-fb-text').value = post.feedbacks[index].text;
+            document.getElementById('edit-feedback-modal').classList.remove('hidden');
+        }
+
+        window.closeEditFeedbackModal = function() {
+            document.getElementById('edit-feedback-modal').classList.add('hidden');
+        }
+
+        window.updateFeedback = async function(event) {
+            event.preventDefault();
+            const docId = document.getElementById('edit-fb-post-id').value;
+            const index = parseInt(document.getElementById('edit-fb-index').value);
+            const newText = document.getElementById('edit-fb-text').value.trim();
+
+            const post = posts.find(p => p.docId === docId);
+            if (!post) return;
+
+            let feedbacks = post.feedbacks || [];
+            if (feedbacks[index]) {
+                feedbacks[index].text = newText;
+                try {
+                    await updateDoc(doc(db, "posts", docId), { feedbacks });
+                    closeEditFeedbackModal();
+                    showToast("Feedback ကို Admin မှ ပြင်ဆင်ပြီးပါပြီ။", "success");
+                } catch (e) { showToast("ပြင်ဆင်ရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+            }
+        }
+
+        window.deleteFeedback = async function(docId, index) {
+            if (confirm("ဤမှတ်ချက်ကို ဖျက်ရန် သေချာပါသလား?")) {
+                const post = posts.find(p => p.docId === docId);
+                if (!post) return;
+                let feedbacks = post.feedbacks || [];
+                feedbacks.splice(index, 1);
+                try {
+                    await updateDoc(doc(db, "posts", docId), { feedbacks });
+                    showToast("Feedback ကို ဖျက်လိုက်ပါပြီ။", "info");
+                } catch (e) { showToast("ဖျက်ရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+            }
+        }
+
+        window.openUserPostModal = function() {
+            document.getElementById('user-post-form').reset();
+            userBase64Images = [];
+            document.getElementById('user-post-modal').classList.remove('hidden');
+        }
+        window.closeUserPostModal = function() { document.getElementById('user-post-modal').classList.add('hidden'); }
+
+        window.handleUserImagesUpload = function(event) {
+            const files = Array.from(event.target.files);
+            userBase64Images = [];
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) { userBase64Images.push(e.target.result); }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.submitUserPost = async function(event) {
+            event.preventDefault();
+            const title = document.getElementById('user-post-title').value;
+            const author = document.getElementById('user-post-author').value;
+            const category = document.getElementById('user-post-category').value;
+            const content = document.getElementById('user-post-content').value;
+            const rawUrls = document.getElementById('user-image-urls').value;
+            const finalImages = [...userBase64Images, ...(rawUrls ? rawUrls.split('\n').map(u => u.trim()).filter(u => u) : [])];
+
+            try {
+                await addDoc(collection(db, "pendingPosts"), {
+                    title, author, category, content, images: finalImages, createdAt: Date.now()
+                });
+                showToast("သင်၏ စာပေကို Admin စစ်ဆေးရန် အောင်မြင်စွာ တင်သွင်းပြီးပါပြီ (Upload Success)!", "success");
+                closeUserPostModal();
+            } catch (e) { showToast("တင်သွင်းရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+        }
+
+        window.openPostModal = function() {
+            document.getElementById('modal-title').textContent = "စာပေ/တရားဒေသနာ တင်ရန် (Admin)";
+            document.getElementById('post-form').reset();
+            document.getElementById('post-doc-id').value = '';
+            base64Images = [];
+            document.getElementById('post-modal').classList.remove('hidden');
+        }
+        window.closePostModal = function() { document.getElementById('post-modal').classList.add('hidden'); }
+
+        window.handleMultipleImagesUpload = function(event) {
+            const files = Array.from(event.target.files);
+            base64Images = [];
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) { base64Images.push(e.target.result); }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.savePost = async function(event) {
+            event.preventDefault();
+            const docId = document.getElementById('post-doc-id').value;
+            const title = document.getElementById('post-title').value;
+            const author = document.getElementById('post-author').value;
+            const category = document.getElementById('post-category').value;
+            const content = document.getElementById('post-content').value;
+            const rawUrls = document.getElementById('post-image-urls').value;
+            const finalImages = [...base64Images, ...(rawUrls ? rawUrls.split('\n').map(u => u.trim()).filter(u => u) : [])];
+
+            try {
+                if (docId) {
+                    const updateData = { title, author, category, content };
+                    if (finalImages.length > 0) updateData.images = finalImages;
+                    await updateDoc(doc(db, "posts", docId), updateData);
+                    showToast("ပို့စ်ကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ (Admin Edit Success)!", "success");
+                } else {
+                    await addDoc(collection(db, "posts"), {
+                        title, author, category, content, images: finalImages, feedbacks: [], createdAt: Date.now()
+                    });
+                    showToast("ပို့စ်အသစ် တင်ပြီးပါပြီ။", "success");
+                }
+                closePostModal();
+            } catch (e) { showToast("သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိနေပါသည်။", "error"); }
+        }
+
+        window.openEditFeedbackModal = function(docId, index) {
+            const post = posts.find(p => p.docId === docId);
+            if (!post || !post.feedbacks[index]) return;
+            document.getElementById('edit-fb-post-id').value = docId;
+            document.getElementById('edit-fb-index').value = index;
+            document.getElementById('edit-fb-text').value = post.feedbacks[index].text;
+            document.getElementById('edit-feedback-modal').classList.remove('hidden');
+        }
+
+        window.closeEditFeedbackModal = function() {
+            document.getElementById('edit-feedback-modal').classList.add('hidden');
+        }
+
+        window.updateFeedback = async function(event) {
+            event.preventDefault();
+            const docId = document.getElementById('edit-fb-post-id').value;
+            const index = parseInt(document.getElementById('edit-fb-index').value);
+            const newText = document.getElementById('edit-fb-text').value.trim();
+
+            const post = posts.find(p => p.docId === docId);
+            if (!post) return;
+
+            let feedbacks = post.feedbacks || [];
+            if (feedbacks[index]) {
+                feedbacks[index].text = newText;
+                try {
+                    await updateDoc(doc(db, "posts", docId), { feedbacks });
+                    closeEditFeedbackModal();
+                    showToast("Feedback ကို Admin မှ ပြင်ဆင်ပြီးပါပြီ။", "success");
+                } catch (e) { showToast("ပြင်ဆင်ရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+            }
+        }
+
+        window.deleteFeedback = async function(docId, index) {
+            if (confirm("ဤမှတ်ချက်ကို ဖျက်ရန် သေချာပါသလား?")) {
+                const post = posts.find(p => p.docId === docId);
+                if (!post) return;
+                let feedbacks = post.feedbacks || [];
+                feedbacks.splice(index, 1);
+                try {
+                    await updateDoc(doc(db, "posts", docId), { feedbacks });
+                    showToast("Feedback ကို ဖျက်လိုက်ပါပြီ။", "info");
+                } catch (e) { showToast("ဖျက်ရာတွင် အမှားအယွင်း ရှိပါသည်။", "error"); }
+            }
+        }
+
+        window.editPostEvent = function(docId) {
+            const post = posts.find(p => p.docId === docId);
+            if (!post) return;
+            document.getElementById('modal-title').textContent = "ပြင်ဆင်မည်";
+            document.getElementById('post-doc-id').value = post.docId;
+            document.getElementById('post-title').value = post.title;
+            document.getElementById('post-author').value = post.author || '';
+            document.getElementById('post-category').value = post.category;
+            document.getElementById('post-content').value = post.content;
+            
+            const existingImages = post.images || [];
+            document.getElementById('post-image-urls').value = existingImages.filter(img => !img.startsWith('data:')).join('\n');
+            base64Images = existingImages.filter(img => img.startsWith('data:'));
+            document.getElementById('post-modal').classList.add('hidden');
+            document.getElementById('post-modal').classList.remove('hidden');
+        }
+
+        window.deletePostEvent = async function(docId) {
+            if (confirm('ဤပို့စ်ကို ဖျက်ရန် သေချာပါသလား?')) {
+                await deleteDoc(doc(db, "posts", docId));
+                showToast("ပို့စ်ကို ဖျက်ပြီးပါပြီ။", "info");
+            }
+        }
+    </script>
+</body>
+</html>
